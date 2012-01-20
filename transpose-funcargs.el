@@ -13,6 +13,7 @@
 
 (defun move-one-funcarg (move-func looking-func)
   (unless (outside-parens?)
+    (move-out-of-string-if-required)
     (condition-case nil
         (progn
           (funcall move-func)
@@ -21,7 +22,13 @@
       (scan-error nil))))
 
 (defun outside-parens? ()
-  (eq (car (syntax-ppss)) 0))
+  (<= (car (syntax-ppss)) 0))
+
+(defun move-out-of-string-if-required ()
+  (let ((pstate (syntax-ppss)))
+    (when (nth 3 pstate)
+      ; in a string
+      (goto-char (nth 8 pstate)))))
 
 (defun forward-funcarg (arg)
   (interactive "p*")

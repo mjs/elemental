@@ -1,26 +1,19 @@
 (require 'ert)
 (require 'transpose-funcargs)
 
-; XXX with point inside an arg
-; XXX with point inside a string arg
-; XXX nested parens
+; XXX test function calls inside function calls, e.g. xxx(zzz(123, yyy), 66)
+; XXX test with crazy whitespace like: something(  aaa, bbb  ,  ccc,ddd  )
+; XXX test when not inside parens
+; XXX per mode tests (macro to help?)
 ; XXX single quotes don't work in fundamental mode (but should in Python mode)
 ; XXX multi-line tests
 ; XXX more tests at limits
-; XXX test when not inside parens
 
 ;; XXX Python test data to use
 ;;
-;; foo(abc, "def, smell", 12)
-
 ;; foo(abc, "def, smell", thing=12, xxx)
 ;; foo( abc, "def, smell", thing=12, xxx )
-;; xxx(zzz(123, yyy), 66)
-
-;; foo(abc,
-;;     "def, smell",
-;;     12)
-
+k
 
 ;; forward-one-funcarg
 
@@ -38,6 +31,11 @@
   (test-in-buffer "foo(abc, def|)"
                   'forward-one-funcarg
                   "foo(abc, def|)"))
+
+(ert-deftest test-move-to-next-arg-when-starting-in-string ()
+  (test-in-buffer "foo(\"th|at, thing\", 123)"
+                  'forward-one-funcarg
+                  "foo(\"that, thing\"|, 123)"))
 
 (ert-deftest test-move-to-next-arg-with-trailing-space ()
   (test-in-buffer "foo(abc|, def )"
@@ -76,6 +74,16 @@
   (test-in-buffer "foo( abc, |def)"
                   'backward-one-funcarg
                   "foo( |abc, def)"))
+
+(ert-deftest test-move-to-start-of-arg-when-starting-in-string ()
+  (test-in-buffer "foo(\"th|at, thing\", 123)"
+                  'backward-one-funcarg
+                  "foo(|\"that, thing\", 123)"))
+
+(ert-deftest test-move-to-start-of-arg-when-starting-in-string-with-kwarg ()
+  (test-in-buffer "foo(meh=\"th|at, thing\", 123)"
+                  'backward-one-funcarg
+                  "foo(|meh=\"that, thing\", 123)"))
 
 (ert-deftest test-move-to-beginning-of-arg-complex ()
   (test-in-buffer "foo(123, yyy=\"a,b\"|)"
@@ -154,7 +162,7 @@
       (set-text-properties 0 (length thing) nil thing)
       thing))
 
-; XXX - hack
+; XXX - hack - there must be a better way of doing this
 (defun run-tests-in-this-file ()
   (interactive)
   (ert-delete-all-tests)
