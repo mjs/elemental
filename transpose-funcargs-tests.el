@@ -119,6 +119,11 @@
                   '(lambda () (transpose-funcarg 1))
                   "foo(def, abc|)"))
 
+(ert-deftest test-transpose-forward-with-ws ()
+  (test-in-buffer "foo(a|bc, def  )"
+                  '(lambda () (transpose-funcarg 1))
+                  "foo(def, abc|  )"))
+
 (ert-deftest test-transpose-simple-backward ()
   (test-in-buffer "foo(abc, def|)"
                   '(lambda () (transpose-funcarg -1))
