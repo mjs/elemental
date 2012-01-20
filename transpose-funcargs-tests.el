@@ -9,6 +9,19 @@
 ; XXX more tests at limits
 ; XXX test when not inside parens
 
+;; XXX Python test data to use
+;;
+;; foo(abc, "def, smell", 12)
+
+;; foo(abc, "def, smell", thing=12, xxx)
+;; foo( abc, "def, smell", thing=12, xxx )
+;; xxx(zzz(123, yyy), 66)
+
+;; foo(abc,
+;;     "def, smell",
+;;     12)
+
+
 ;; forward-one-funcarg
 
 (ert-deftest test-move-to-end-of-arg ()
@@ -18,6 +31,11 @@
 
 (ert-deftest test-move-to-next-arg ()
   (test-in-buffer "foo(abc|, def)"
+                  'forward-one-funcarg
+                  "foo(abc, def|)"))
+
+(ert-deftest test-attempt-to-move-past-end ()
+  (test-in-buffer "foo(abc, def|)"
                   'forward-one-funcarg
                   "foo(abc, def|)"))
 
