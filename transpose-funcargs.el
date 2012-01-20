@@ -1,37 +1,27 @@
-; ISSUES:
-; handling inside strings is not quite right, need to pop out of them (moving to end that is closest to point)
-; ws handling isn't quite right
-; use syntax tables for looking-at expression so this works in more languages (eg. elisp, C++)
-; handle forward-sexp returning errors when it doesn't know what to do
-; when starting inside a string it's possible to end up at the last quote instead of on the comma
-; make it work with square brackets too
-
-; Useful things
+; Useful things:
 ; char-after
 ; char-syntax
 ; skip-syntax-forward / backward
 
-;; factor forward/backward-one-funcarg into one implementation
-
 (defun forward-one-funcarg ()
   (interactive)
-  (unless (eq (car (syntax-ppss)) 0)
-    (condition-case nil
-        (progn
-          (forward-sexp)
-          (while (not (looking-at "[,) ]"))
-            (forward-sexp)))
-      (scan-error nil))))
+  (move-one-funcarg 'forward-sexp (lambda () (looking-at "[,) ]"))))
 
 (defun backward-one-funcarg ()
   (interactive)
-  (unless (eq (car (syntax-ppss)) 0)
+  (move-one-funcarg 'backward-sexp (lambda () (looking-back "[,( ]"))))
+
+(defun move-one-funcarg (move-func looking-func)
+  (unless (outside-parens?)
     (condition-case nil
         (progn
-          (backward-sexp)
-          (while (not (looking-back "[,( ]"))
-            (backward-sexp)))
+          (funcall move-func)
+          (while (not (funcall looking-func))
+            (funcall move-func)))
       (scan-error nil))))
+
+(defun outside-parens? ()
+  (eq (car (syntax-ppss)) 0))
 
 (defun forward-funcarg (arg)
   (interactive "p*")

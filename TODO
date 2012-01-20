@@ -1,0 +1,9 @@
+* handling inside strings is not quite right, need to pop out of them
+  (moving to end that is closest to point)
+* when starting inside a string it's possible to end up at the last
+  quote instead of on the comma
+* ws handling isn't quite right
+* use syntax tables for looking-at expression so this works in more
+  languages (eg. elisp, C++)
+* documentation
+* square brackets and brace too (should come for free when using syntax tables)
