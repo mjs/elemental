@@ -1,18 +1,11 @@
 (require 'ert)
 (require 'transpose-funcargs)
 
-; XXX test function calls inside function calls, e.g. xxx(zzz(123, yyy), 66)
-; XXX test with crazy whitespace like: something(  aaa, bbb  ,  ccc,ddd  )
 ; XXX test when not inside parens
 ; XXX per mode tests (macro to help?)
 ; XXX single quotes don't work in fundamental mode (but should in Python mode)
 ; XXX multi-line tests
 ; XXX more tests at limits
-
-;; XXX Python test data to use
-;;
-;; foo(abc, "def, smell", thing=12, xxx)
-;; foo( abc, "def, smell", thing=12, xxx )
 
 
 ;; forward-one-funcarg
@@ -76,9 +69,9 @@
                   "foo( |abc, def)"))
 
 (ert-deftest test-move-to-start-of-arg-when-starting-in-string ()
-  (test-in-buffer "foo(\"th|at, thing\", 123)"
+  (test-in-buffer "foo(321, \"th|at, thing\", 123)"
                   'backward-one-funcarg
-                  "foo(|\"that, thing\", 123)"))
+                  "foo(321, |\"that, thing\", 123)"))
 
 (ert-deftest test-move-to-start-of-arg-when-starting-in-string-with-kwarg ()
   (test-in-buffer "foo(meh=\"th|at, thing\", 123)"
@@ -128,9 +121,14 @@
                   "foo(def, abc|)"))
 
 (ert-deftest test-transpose-forward-with-ws ()
-  (test-in-buffer "foo(a|bc, def  )"
+  (test-in-buffer "foo(  |aaa, bbb  ,  ccc,ddd  )"
                   '(lambda () (transpose-funcarg 1))
-                  "foo(def, abc|  )"))
+                  "foo(  bbb, aaa|  ,  ccc,ddd  )"))
+
+(ert-deftest test-transpose-forward-with-ws-2 ()
+  (test-in-buffer "foo(  bbb, aaa|  ,  ccc,ddd  )"
+                  '(lambda () (transpose-funcarg 1))
+                  "foo(  bbb, ccc  ,  aaa|,ddd  )"))
 
 (ert-deftest test-transpose-simple-backward ()
   (test-in-buffer "foo(abc, def|)"
@@ -142,6 +140,20 @@
                   '(lambda () (transpose-funcarg -1))
                   "foo(|def, abc)"))
 
+(ert-deftest test-transpose-nested-inner ()
+  (test-in-buffer "xxx(yyy(|123, zzz), 66)"
+                  '(lambda () (transpose-funcarg 1))
+                  "xxx(yyy(zzz, 123|), 66)"))
+
+(ert-deftest test-transpose-nested-outer ()
+  (test-in-buffer "xxx(y|yy(123, zzz), 66)"
+                  '(lambda () (transpose-funcarg 1))
+                  "xxx(66, yyy(123, zzz)|)"))
+
+(ert-deftest test-transpose-inside-string-with-comma ()
+  (test-in-buffer "foo(abc, \"de|f, smell\", thing=12, xxx)"
+                  '(lambda () (transpose-funcarg 1))
+                  "foo(abc, thing=12, \"def, smell\"|, xxx)"))
 
 (defun test-in-buffer (before func-to-test after)
   (with-temp-buffer
