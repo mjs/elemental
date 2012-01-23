@@ -1,4 +1,5 @@
 * ws handling isn't right: spaces inside arguments cause problems
 * use syntax tables for looking-at expression so this works in more languages (eg. elisp, C++)
-* documentation
 * square brackets and brace too (should come for free when using syntax tables)
+* documentation
+* the usual description and install instructions at the top of the main .el
