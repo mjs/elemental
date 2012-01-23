@@ -5,20 +5,24 @@
 
 (defun forward-one-funcarg ()
   (interactive)
-  (move-one-funcarg 'forward-sexp (lambda () (looking-at "[,) ]"))))
-
-(defun backward-one-funcarg ()
-  (interactive)
-  (move-one-funcarg 'backward-sexp (lambda () (looking-back "[,( ]"))))
-
-(defun move-one-funcarg (move-func looking-func)
   (unless (outside-parens?)
     (move-out-of-string-if-required)
     (condition-case nil
         (progn
-          (funcall move-func)
-          (while (not (funcall looking-func))
-            (funcall move-func)))
+          (forward-sexp)
+          (while (not (looking-at "[,) ]"))
+            (forward-sexp)))
+      (scan-error nil))))
+
+(defun backward-one-funcarg ()
+  (interactive)
+  (unless (outside-parens?)
+    (condition-case nil
+        (progn
+          (unless (move-out-of-string-if-required)
+            (backward-sexp))
+          (while (not (looking-back "[,( ]"))
+            (backward-sexp)))
       (scan-error nil))))
 
 (defun outside-parens? ()
@@ -26,9 +30,9 @@
 
 (defun move-out-of-string-if-required ()
   (let ((pstate (syntax-ppss)))
-    (when (nth 3 pstate)
-      ; in a string
-      (goto-char (nth 8 pstate)))))
+    (if (nth 3 pstate)
+        (goto-char (nth 8 pstate))    ; in a string, move to start
+      nil)))
 
 (defun forward-funcarg (arg)
   (interactive "p*")
