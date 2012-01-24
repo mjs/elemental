@@ -5,7 +5,7 @@
     (condition-case nil
         (progn
           (forward-sexp)
-          (while (not (looking-forward-ignoring-ws "[,)]"))
+          (while (not (looking-forward-ignoring-ws ","))
             (forward-sexp)))
       (scan-error nil))))
 
@@ -16,7 +16,7 @@
         (progn
           (unless (move-out-of-string-if-required)
             (backward-sexp))
-          (while (not (looking-back-ignoring-ws "[,(]"))
+          (while (not (looking-back-ignoring-ws ","))
             (backward-sexp)))
       (scan-error nil))))
 

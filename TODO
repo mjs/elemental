@@ -1,4 +1,4 @@
-* use syntax tables for looking-at expression so this works in more languages (eg. elisp, C++)
-* square brackets and brace too (should come for free when using syntax tables)
-* documentation
+* fix issues with backwards transpose when at start of argument (see failing test)
+* clean up tests
+* documentation of functions
 * the usual description and install instructions at the top of the main .el
