@@ -39,9 +39,8 @@
 
 (defun move-out-of-string-if-required ()
   (let ((pstate (syntax-ppss)))
-    (if (nth 3 pstate)
-        (goto-char (nth 8 pstate))    ; in a string, move to start
-      nil)))
+    (when (nth 3 pstate)
+        (goto-char (nth 8 pstate)))))    ; in a string, move to start
 
 (defun forward-funcarg (arg)
   (interactive "p*")
