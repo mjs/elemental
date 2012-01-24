@@ -36,9 +36,9 @@
                   "foo(abc, def| )"))
 
 (ert-deftest test-move-to-end-of-arg-complex ()
-  (test-in-buffer "foo(123, |yyy=\"a,b\")"
+  (test-in-buffer "foo(123, |yyy =\"a,b\")"
                   'forward-one-funcarg
-                  "foo(123, yyy=\"a,b\"|)"))
+                  "foo(123, yyy =\"a,b\"|)"))
 
 (ert-deftest test-move-to-next-arg-complex ()
   (test-in-buffer "foo(123|, yyy=\"a,b\")"
@@ -46,9 +46,9 @@
                   "foo(123, yyy=\"a,b\"|)"))
 
 (ert-deftest test-move-to-next-arg-complex ()
-  (test-in-buffer "foo(123|, yyy=\"a,b\")"
+  (test-in-buffer "foo(123|, yyy =\"a,b\")"
                   'forward-one-funcarg
-                  "foo(123, yyy=\"a,b\"|)"))
+                  "foo(123, yyy =\"a,b\"|)"))
 
 
 ;; backward-one-funcarg
@@ -79,14 +79,14 @@
                   "foo(|meh=\"that, thing\", 123)"))
 
 (ert-deftest test-move-to-beginning-of-arg-complex ()
-  (test-in-buffer "foo(123, yyy=\"a,b\"|)"
+  (test-in-buffer "foo(123, yyy =\"a,b\"|)"
                   'backward-one-funcarg
-                  "foo(123, |yyy=\"a,b\")"))
+                  "foo(123, |yyy =\"a,b\")"))
 
 (ert-deftest test-move-to-previous-arg-complex ()
-  (test-in-buffer "foo(123, |yyy=\"a,b\")"
+  (test-in-buffer "foo(123, |yyy =\"a,b\")"
                   'backward-one-funcarg
-                  "foo(|123, yyy=\"a,b\")"))
+                  "foo(|123, yyy =\"a,b\")"))
 
 
 ;; forward-funcarg

@@ -1,7 +1,6 @@
 ; Useful things:
 ; char-after
 ; char-syntax
-; skip-syntax-forward / backward
 
 (defun forward-one-funcarg ()
   (interactive)
@@ -10,7 +9,7 @@
     (condition-case nil
         (progn
           (forward-sexp)
-          (while (not (looking-at "[,) ]"))
+          (while (not (looking-forward-ignoring-ws "[,)]"))
             (forward-sexp)))
       (scan-error nil))))
 
@@ -21,9 +20,19 @@
         (progn
           (unless (move-out-of-string-if-required)
             (backward-sexp))
-          (while (not (looking-back "[,( ]"))
+          (while (not (looking-back-ignoring-ws "[,(]"))
             (backward-sexp)))
       (scan-error nil))))
+
+(defun looking-forward-ignoring-ws (chars)
+  (save-excursion
+    (skip-syntax-forward "-")
+    (looking-at chars)))
+
+(defun looking-back-ignoring-ws (chars)
+  (save-excursion
+    (skip-syntax-backward "-")
+    (looking-back chars)))
 
 (defun outside-parens? ()
   (<= (car (syntax-ppss)) 0))
