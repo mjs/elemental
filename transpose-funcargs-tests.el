@@ -1,12 +1,7 @@
 (require 'ert)
 (require 'transpose-funcargs)
 
-; XXX test when not inside parens
-; XXX per mode tests (macro to help?)
-; XXX single quotes don't work in fundamental mode (but should in Python mode)
 ; XXX multi-line tests
-; XXX more tests at limits
-
 
 ;; forward-one-funcarg
 
@@ -60,6 +55,17 @@
                   'forward-one-funcarg
                   "foo(123, yyy =\"a,b\"|)"))
 
+(ert-deftest test-when-inside-buffer ()
+  (test-in-buffer "foo(|abc, def)"
+                  'forward-one-funcarg
+                  "foo(abc|, def)"))
+
+(ert-deftest test-move-forward-when-not-in-parens ()
+  "Nothing should happen when outside parens/brackets/braces"
+  (test-in-buffer "f|oo bah"
+                  'forward-one-funcarg
+                  "f|oo bah"))
+
 
 ;; backward-one-funcarg
 
@@ -108,6 +114,12 @@
                   'backward-one-funcarg
                   "foo(|123, yyy =\"a,b\")"))
 
+(ert-deftest test-move-backward-when-not-in-parens ()
+  "Nothing should happen when outside parens/brackets/braces"
+  (test-in-buffer "foo b|ah"
+                  'backward-one-funcarg
+                  "foo b|ah"))
+
 
 ;; forward-funcarg
 
@@ -121,12 +133,20 @@
                   '(lambda () (forward-funcarg 2))
                   "foo(abc, def|)"))
 
+(ert-deftest test-forward-funcarg-too-many ()
+  (test-in-buffer "foo(|abc, def)"
+                  '(lambda () (forward-funcarg 4))
+                  "foo(abc, def|)"))
+
 (ert-deftest test-forward-funcarg-negative ()
   (test-in-buffer "foo(abc, def|)"
                   '(lambda () (forward-funcarg -2))
                   "foo(|abc, def)"))
 
-; XXX test when arg is larger than number of function params to move through
+(ert-deftest test-forward-funcarg-negative-too-many ()
+  (test-in-buffer "foo(abc, def|)"
+                  '(lambda () (forward-funcarg -3))
+                  "foo(|abc, def)"))
 
 ;; transpose-funcarg
 
@@ -177,8 +197,6 @@
 
 (defun test-in-buffer (before func-to-test after)
   (with-temp-buffer
-    ;;XXX ideally we could test in various modes but the hooks get in the way, kill them first
-    ;; (python-mode)
     (insert before)
     (beginning-of-line)
     (search-forward "|")
@@ -193,10 +211,3 @@
   (let ((thing (thing-at-point thing-type)))
       (set-text-properties 0 (length thing) nil thing)
       thing))
-
-; XXX - hack - there must be a better way of doing this
-(defun run-tests-in-this-file ()
-  (interactive)
-  (ert-delete-all-tests)
-  (eval-buffer)
-  (ert t))
