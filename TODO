@@ -1,6 +1,8 @@
 * documentation of functions
 * the usual description and install instructions at the top of the main .el
 
+* screencast demo
+
 * make it work in situations where comma isn't the separator (eg. lisp-mode)
 * back and forward swap functions that don't use tranpose-subr and
   therefore don't have some of it's oddities?
