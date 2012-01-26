@@ -1,4 +1,4 @@
-(defun forward-one-funcarg ()
+(defun forward-one-element ()
   (interactive)
   (unless (outside-parens?)
     (move-out-of-string-if-required)
@@ -9,7 +9,7 @@
             (forward-sexp)))
       (scan-error nil))))
 
-(defun backward-one-funcarg ()
+(defun backward-one-element ()
   (interactive)
   (unless (outside-parens?)
     (condition-case nil
@@ -42,18 +42,18 @@
     (when (nth 3 pstate)
         (goto-char (nth 8 pstate)))))    ; in a string, move to start
 
-(defun forward-funcarg (arg)
+(defun forward-element (arg)
   (interactive "p*")
   (if (>= arg 0)
-      (dotimes (_ arg) (forward-one-funcarg))
-    (dotimes (_ (abs arg)) (backward-one-funcarg))))
+      (dotimes (_ arg) (forward-one-element))
+    (dotimes (_ (abs arg)) (backward-one-element))))
 
-(defun transpose-funcarg (arg)
+(defun transpose-element (arg)
   (interactive "*p")
-  (transpose-subr 'forward-funcarg arg))
+  (transpose-subr 'forward-element arg))
 
-(defun transpose-previous-funcarg (arg)
+(defun transpose-previous-element (arg)
   (interactive "*p")
-  (transpose-subr 'forward-funcarg (- arg)))
+  (transpose-subr 'forward-element (- arg)))
 
-(provide 'transpose-funcargs)
+(provide 'elemental)
