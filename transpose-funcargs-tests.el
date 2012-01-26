@@ -1,7 +1,6 @@
 (require 'ert)
 (require 'transpose-funcargs)
 
-; XXX multi-line tests
 
 ;; forward-one-funcarg
 
@@ -66,6 +65,20 @@
                   'forward-one-funcarg
                   "f|oo bah"))
 
+(ert-deftest test-move-forward-multi-line-0 ()
+  (test-in-buffer "[|foo,\n   \"second, actually\", \n123  ]"
+                  'forward-one-funcarg
+                  "[foo|,\n   \"second, actually\", \n123  ]"))
+
+(ert-deftest test-move-forward-multi-line-1 ()
+  (test-in-buffer "[foo|,\n   \"second, actually\", \n123  ]"
+                  'forward-one-funcarg
+                  "[foo,\n   \"second, actually\"|, \n123  ]"))
+
+(ert-deftest test-move-forward-multi-line-2 ()
+  (test-in-buffer "[foo,\n   \"second, actually\"|, \n123  ]"
+                  'forward-one-funcarg
+                  "[foo,\n   \"second, actually\", \n123|  ]"))
 
 ;; backward-one-funcarg
 
@@ -119,6 +132,21 @@
   (test-in-buffer "foo b|ah"
                   'backward-one-funcarg
                   "foo b|ah"))
+
+(ert-deftest test-move-backward-multi-line-0 ()
+  (test-in-buffer "[foo,\n   \"second, actually\", \n123|  ]"
+                  'backward-one-funcarg
+                  "[foo,\n   \"second, actually\", \n|123  ]"))
+
+(ert-deftest test-move-backward-multi-line-1 ()
+  (test-in-buffer "[foo,\n   \"second, actually\", \n|123  ]"
+                  'backward-one-funcarg
+                  "[foo,\n   |\"second, actually\", \n123  ]"))
+
+(ert-deftest test-move-backward-multi-line-2 ()
+  (test-in-buffer "[foo,\n   |\"second, actually\", \n123  ]"
+                  'backward-one-funcarg
+                  "[|foo,\n   \"second, actually\", \n123  ]"))
 
 
 ;; forward-funcarg
@@ -198,7 +226,7 @@
 (defun test-in-buffer (before func-to-test after)
   (with-temp-buffer
     (insert before)
-    (beginning-of-line)
+    (beginning-of-buffer)
     (search-forward "|")
     (backward-char)
     (delete-char 1)
