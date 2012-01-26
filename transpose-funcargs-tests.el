@@ -204,10 +204,6 @@
     (delete-char 1)
     (funcall func-to-test)
     (insert "|")
-    (should (string= (plain-thing-at-point 'line) after))))
-
-(defun plain-thing-at-point (thing-type)
-  "Like thing-at-point, but strip out any text properties"
-  (let ((thing (thing-at-point thing-type)))
-      (set-text-properties 0 (length thing) nil thing)
-      thing))
+    (should (string=
+             (buffer-substring-no-properties (point-min) (point-max))
+             after))))
