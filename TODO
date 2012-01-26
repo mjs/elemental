@@ -1,4 +1,7 @@
-* fix issues with backwards transpose when at start of argument (see failing test)
-* clean up tests
+* rename to "elements.el" or "elemental.el"
 * documentation of functions
 * the usual description and install instructions at the top of the main .el
+
+* make it work in situations where comma isn't the separator (eg. lisp-mode)
+* back and forward swap functions that don't use tranpose-subr and
+  therefore don't have some of it's oddities?
