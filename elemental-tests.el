@@ -1,3 +1,10 @@
+;; Unit tests for elemental.el
+;;
+;; These tests use the ERT framework which ships with Emacs 24.
+;;
+;; To run the tests, eval this buffer and run the ert function. For
+;; more information see the ERT info page.
+
 (require 'ert)
 (require 'elemental)
 
