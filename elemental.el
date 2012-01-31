@@ -1,7 +1,7 @@
 ;; elemental.el -- functions for intelligently jumping between and
 ;; transposing list/tuple/dictionary/function-parameter
-;; elements. These functions are mainly useful when editing software
-;; source code.
+;; elements. These functions are primarily useful when editing
+;; software source code.
 ;;
 ;; Copyright (C) 2012 Menno Smits
 ;;
@@ -18,15 +18,16 @@
 ;; literals and nested function calls are involved. The functions in
 ;; this module make this process easier.
 ;;
-;; The main functions of interest are: forward-one-element,
-;; backward-one-element, forward-element and transpose-element.
+;; The main functions of interest are elem-forward and elem-transpose.
 ;;
 ;; Given a source code line, here's how the point moves with success
-;; calls to forward-element:
-;;     something(|123, "some, string", fn(a, b))
-;;     something(123|, "some, string", fn(a, b))
-;;     something(123, "some, string"|, fn(a, b))
-;;     something(123, "some, string", fn(a, b)|)
+;; calls to elem-forward (the | shows the point):
+;;
+;;     myfunc(|123, "some, string", fn(a, b))
+;;     myfunc(123|, "some, string", fn(a, b))
+;;     myfunc(123, "some, string"|, fn(a, b))
+;;     myfunc(123, "some, string", fn(a, b)|)
+
 
 ;; XXX finish
 
@@ -56,62 +57,62 @@
 ;; 02111-1307, USA.
 
 
-(defun forward-one-element ()
+(defun elem-forward-one ()
   (interactive)
-  (unless (outside-parens?)
-    (move-out-of-string-if-required)
+  (unless (elem-outside-parens?)
+    (elem-move-out-of-string-if-required)
     (condition-case nil
         (progn
           (forward-sexp)
-          (while (not (looking-forward-ignoring-ws ","))
+          (while (not (elem-looking-forward-ignoring-ws ","))
             (forward-sexp)))
       (scan-error nil))))
 
-(defun backward-one-element ()
+(defun elem-backward-one ()
   (interactive)
-  (unless (outside-parens?)
+  (unless (elem-outside-parens?)
     (condition-case nil
         (progn
-          (unless (move-out-of-string-if-required)
+          (unless (elem-move-out-of-string-if-required)
             (backward-sexp))
-          (while (not (looking-back-ignoring-ws ","))
+          (while (not (elem-looking-back-ignoring-ws ","))
             (backward-sexp)))
       (scan-error nil))))
 
-(defun looking-forward-ignoring-ws (regex)
+(defun elem-looking-forward-ignoring-ws (regex)
   (save-excursion
-    (skip-ws 'char-after 'forward-char)
+    (elem-skip-ws 'char-after 'forward-char)
     (looking-at regex)))
 
-(defun looking-back-ignoring-ws (regex)
+(defun elem-looking-back-ignoring-ws (regex)
   (save-excursion
-    (skip-ws 'char-before 'backward-char)
+    (elem-skip-ws 'char-before 'backward-char)
     (looking-back regex)))
 
-(defun skip-ws (look-func move-func)
+(defun elem-skip-ws (look-func move-func)
   (while (= (char-syntax (funcall look-func)) 32)
     (funcall move-func)))
 
-(defun outside-parens? ()
+(defun elem-outside-parens? ()
   (<= (car (syntax-ppss)) 0))
 
-(defun move-out-of-string-if-required ()
+(defun elem-move-out-of-string-if-required ()
   (let ((pstate (syntax-ppss)))
     (when (nth 3 pstate)
         (goto-char (nth 8 pstate)))))    ; in a string, move to start
 
-(defun forward-element (arg)
+(defun elem-forward (arg)
   (interactive "p*")
   (if (>= arg 0)
-      (dotimes (_ arg) (forward-one-element))
-    (dotimes (_ (abs arg)) (backward-one-element))))
+      (dotimes (_ arg) (elem-forward-one))
+    (dotimes (_ (abs arg)) (elem-backward-one))))
 
-(defun transpose-element (arg)
+(defun elem-transpose (arg)
   (interactive "*p")
-  (transpose-subr 'forward-element arg))
+  (transpose-subr 'elem-forward arg))
 
-(defun transpose-previous-element (arg)
+(defun elem-transpose-previous (arg)
   (interactive "*p")
-  (transpose-subr 'forward-element (- arg)))
+  (transpose-subr 'elem-forward (- arg)))
 
 (provide 'elemental)
