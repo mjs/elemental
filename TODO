@@ -1,3 +1,4 @@
+* moving doesn't quite work in c-mode and python-mode, handle < and > syntax (comments)
 * documentation of functions
 
 * screencast demo
