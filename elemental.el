@@ -139,8 +139,9 @@
     (looking-back regex)))
 
 (defun elem-skip-ws (look-func move-func)
-  (while (= (char-syntax (funcall look-func)) 32)
-    (funcall move-func)))
+  (let ((ws-classes '(32 62)))
+    (while (memq (char-syntax (funcall look-func)) ws-classes)
+      (funcall move-func))))
 
 (defun elem-outside-parens? ()
   (<= (car (syntax-ppss)) 0))
