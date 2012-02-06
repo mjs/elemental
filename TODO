@@ -1,8 +1,11 @@
-* moving doesn't quite work in c-mode and python-mode, handle < and > syntax (comments)
+* some basic non-fundamental mode tests that exercises comment syntax handling
 * documentation of functions
 
 * screencast demo
 
+-- first release --
+
+* handling of commments in multi-line lists
 * make it work in situations where comma isn't the separator (eg. lisp-mode)
 * back and forward swap functions that don't use tranpose-subr and
   therefore don't have some of it's oddities?
