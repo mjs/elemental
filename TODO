@@ -1,12 +1,14 @@
 * some basic non-fundamental mode tests that exercises comment syntax handling
-* document comment limitation
+* handling of commments in multi-line lists
+* (un)document comment limitation
+* use "elem/" prefix instead of "elem-"
 * documentation of functions
 
 * screencast demo
 
 -- first release --
 
-* handling of commments in multi-line lists
+* deletion of elements
 * make it work in situations where comma isn't the separator (eg. lisp-mode)
 * back and forward swap functions that don't use tranpose-subr and
   therefore don't have some of it's oddities?
