@@ -112,9 +112,9 @@
     (elem-move-out-of-string-if-required)
     (condition-case nil
         (progn
-          (forward-sexp)
+          (elem-forward-sexp-skipping-comments)
           (while (not (elem-looking-forward-ignoring-ws ","))
-            (forward-sexp)))
+            (elem-forward-sexp-skipping-comments)))
       (scan-error nil))))
 
 (defun elem-backward-one ()
@@ -123,25 +123,44 @@
     (condition-case nil
         (progn
           (unless (elem-move-out-of-string-if-required)
-            (backward-sexp))
+            (elem-backward-sexp-skipping-comments))
           (while (not (elem-looking-back-ignoring-ws ","))
-            (backward-sexp)))
+            (elem-backward-sexp-skipping-comments)))
       (scan-error nil))))
+
+(defun elem-forward-sexp-skipping-comments ()
+  (forward-sexp)
+  (while (elem-in-comment? (point))
+    (forward-sexp)))
+
+(defun elem-backward-sexp-skipping-comments ()
+  (backward-sexp)
+  (while (elem-in-comment? (point))
+    (backward-sexp)))
 
 (defun elem-looking-forward-ignoring-ws (regex)
   (save-excursion
-    (elem-skip-ws 'char-after 'forward-char)
+    (elem-skip-ws 'char-after 0 'forward-char)
     (looking-at regex)))
 
 (defun elem-looking-back-ignoring-ws (regex)
   (save-excursion
-    (elem-skip-ws 'char-before 'backward-char)
-    (looking-back regex)))
+    (elem-skip-ws 'char-before -1 'backward-char)
+    (backward-char)
+    (looking-at regex)))
 
-(defun elem-skip-ws (look-func move-func)
-  (let ((ws-classes '(32 62)))
-    (while (memq (char-syntax (funcall look-func)) ws-classes)
-      (funcall move-func))))
+(defun elem-skip-ws (look-func point-offset move-func)
+  (while (or (memq (char-syntax (funcall look-func)) '(32 33 60 62)) (elem-in-comment? (+ (point) point-offset)))
+      (funcall move-func)))
+
+(defvar elem-comment-faces
+  '(font-lock-comment-face
+    font-lock-comment-delimiter-face))
+
+(defun elem-in-comment? (where)
+  (if (memq (get-text-property where 'face) elem-comment-faces)
+      t
+    nil))
 
 (defun elem-outside-parens? ()
   (<= (car (syntax-ppss)) 0))
