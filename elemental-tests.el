@@ -8,6 +8,7 @@
 (require 'ert)
 (require 'elemental)
 
+(require 'cc-mode)
 
 ;; elem-forward-one
 
@@ -155,6 +156,35 @@
              'elem-backward-one
              "[|foo,\n   \"second, actually\", \n123  ]"))
 
+(ert-deftest test-c++-move-backwards-with-comments ()
+  (elem-test
+   "
+   x = [foo,                    /* another, comment */
+        \"second, actually\",   // comment
+        |123 ];
+   "
+   'elem-backward-one
+   "
+   x = [foo,                    /* another, comment */
+        |\"second, actually\",   // comment
+        123 ];
+   "
+   'elem-test-init-c++-mode))
+
+(ert-deftest test-c++-move-backwards-with-comments-2 ()
+  (elem-test
+   "
+   x = [foo,                    /* another, comment */
+        |\"second, actually\",   // comment
+        123 ];
+   "
+   'elem-backward-one
+   "
+   x = [|foo,                    /* another, comment */
+        \"second, actually\",   // comment
+        123 ];
+   "
+   'elem-test-init-c++-mode))
 
 ;; elem-forward
 
@@ -232,15 +262,21 @@
              '(lambda () (elem-transpose 1))
              "foo(abc, thing=12, \"def, smell\"|, xxx)"))
 
-(defun elem-test (before func-to-test after)
+(defun elem-test (before func-to-test after &optional setup-func)
   (with-temp-buffer
     (insert before)
     (beginning-of-buffer)
     (search-forward "|")
     (backward-char)
     (delete-char 1)
+    (when setup-func
+      (funcall setup-func))
     (funcall func-to-test)
     (insert "|")
     (should (string=
              (buffer-substring-no-properties (point-min) (point-max))
              after))))
+
+(defun elem-test-init-c++-mode ()
+  (c++-mode)
+  (font-lock-fontify-buffer))
