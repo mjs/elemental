@@ -140,22 +140,18 @@
 
 (defun elem-looking-forward-ignoring-ws (regex)
   (save-excursion
-    (elem-skip-ws 'char-after 0 'forward-char)
+    (elem-skip-ws-and-comments 'char-after 0 'forward-char)
     (looking-at regex)))
 
 (defun elem-looking-back-ignoring-ws (regex)
   (save-excursion
-    (elem-skip-ws 'char-before -1 'backward-char)
+    (elem-skip-ws-and-comments 'char-before -1 'backward-char)
     (backward-char)
     (looking-at regex)))
 
-(defun elem-skip-ws (look-func point-offset move-func)
+(defun elem-skip-ws-and-comments (look-func point-offset move-func)
   (while (or (memq (char-syntax (funcall look-func)) '(32 33 60 62)) (elem-in-comment? (+ (point) point-offset)))
       (funcall move-func)))
-
-(defvar elem-comment-faces
-  '(font-lock-comment-face
-    font-lock-comment-delimiter-face))
 
 (defun elem-in-comment? (where)
   (if (memq (get-text-property where 'face) elem-comment-faces)
@@ -183,5 +179,10 @@
 (defun elem-transpose-backward (arg)
   (interactive "*p")
   (transpose-subr 'elem-forward (- arg)))
+
+(defconst elem-comment-faces
+  '(font-lock-comment-face
+    font-lock-comment-delimiter-face)
+  "font lock faces used for comments")
 
 (provide 'elemental)
