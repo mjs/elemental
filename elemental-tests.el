@@ -88,6 +88,36 @@
              'elem-forward-one
              "[foo,\n   \"second, actually\", \n123|  ]"))
 
+(ert-deftest test-c++-move-forward-with-comments ()
+  (elem-test
+   "
+   x = [foo|,                    /* another, comment */
+        \"second, actually\",   // comment
+        123 ];
+   "
+   'elem-forward-one
+   "
+   x = [foo,                    /* another, comment */
+        \"second, actually\"|,   // comment
+        123 ];
+   "
+   'c++-mode))
+
+(ert-deftest test-c++-move-forward-with-comments-2 ()
+  (elem-test
+   "
+   x = [foo,                    /* another, comment */
+        \"second, actually\"|,   // comment
+        123 ];
+   "
+   'elem-forward-one
+   "
+   x = [foo,                    /* another, comment */
+        \"second, actually\",   // comment
+        123| ];
+   "
+   'c++-mode))
+
 ;; elem-backward-one
 
 (ert-deftest test-move-back-to-start-of-arg ()
@@ -261,6 +291,37 @@
   (elem-test "foo(abc, \"de|f, smell\", thing=12, xxx)"
              '(lambda () (elem-transpose 1))
              "foo(abc, thing=12, \"def, smell\"|, xxx)"))
+
+(ert-deftest test-c++-mode-transpose-0 ()
+  (elem-test
+   "
+   x = [foo|,    /* another, comment */
+        \"second, actually\",   // comment
+        123 ];
+   "
+   '(lambda () (elem-transpose 1))
+   "
+   x = [\"second, actually\",    /* another, comment */
+        foo|,   // comment
+        123 ];
+   "
+   'c++-mode))
+
+(ert-deftest test-c++-mode-transpose-1 ()
+  (elem-test
+   "
+   x = [foo,    /* another, comment */
+        \"seco|nd, actually\",   // comment
+        123 ];
+   "
+   '(lambda () (elem-transpose 1))
+   "
+   x = [foo,    /* another, comment */
+        123,   // comment
+        \"second, actually\"| ];
+   "
+   'c++-mode))
+
 
 (defun elem-test (before func-to-test after &optional mode-func)
   (with-temp-buffer

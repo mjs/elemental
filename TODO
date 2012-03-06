@@ -1,4 +1,3 @@
-* more movement and transpose tests in c++ and python modes
 * refactor recent changes - the code has become unclear
 * elem- to elem/ prefix change
 * documentation of functions
