@@ -10,12 +10,41 @@
 
 (require 'cc-mode)
 
+(defun elem-test (before func-to-test after &optional mode-func)
+  "Run an elemental unit test
+
+  Sets up a temporary buffer with the 'before' text, runs func-to-test
+  and checks that the buffer looks like the 'after' text. 'mode-func'
+  is an optional function to call to set the mode of the buffer."
+  (with-temp-buffer
+    (insert before)
+    (beginning-of-buffer)
+    (search-forward "|")
+    (backward-char)
+    (delete-char 1)
+    (when mode-func
+      (funcall mode-func)
+      (font-lock-fontify-buffer))
+    (if (functionp func-to-test)
+        (funcall func-to-test)
+      (eval func-to-test))
+    (insert "|")
+    (should (string=
+             (buffer-substring-no-properties (point-min) (point-max))
+             after))))
+
+(defmacro elem-deftest (name before test-func after)
+  (declare (indent 4))
+  `(ert-deftest ,(intern (format "elem-test-%s" name)) ()
+    (elem-test ,before (quote ,test-func) ,after)))
+
+
 ;; elem-forward-one
 
-(ert-deftest test-move-to-end-of-arg ()
-  (elem-test "foo(|abc, def)"
-             'elem-forward-one
-             "foo(abc|, def)"))
+(elem-deftest move-to-end-of-arg
+    "foo(|abc, def)"
+    elem-forward-one
+    "foo(abc|, def)")
 
 (ert-deftest test-move-to-next-arg ()
   (elem-test "foo(abc|, def)"
@@ -321,20 +350,3 @@
         \"second, actually\"| ];
    "
    'c++-mode))
-
-
-(defun elem-test (before func-to-test after &optional mode-func)
-  (with-temp-buffer
-    (insert before)
-    (beginning-of-buffer)
-    (search-forward "|")
-    (backward-char)
-    (delete-char 1)
-    (when mode-func
-      (funcall mode-func)
-      (font-lock-fontify-buffer))
-    (funcall func-to-test)
-    (insert "|")
-    (should (string=
-             (buffer-substring-no-properties (point-min) (point-max))
-             after))))
