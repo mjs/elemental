@@ -33,10 +33,11 @@
              (buffer-substring-no-properties (point-min) (point-max))
              after))))
 
-(defmacro elem-deftest (name before test-func after)
-  (declare (indent 4))
+(defmacro elem-deftest (name before test-func after &optional mode-func)
+  "Macro for defining elemental tests - reduces boilerplate"
+  (declare (indent 5))
   `(ert-deftest ,(intern (format "elem-test-%s" name)) ()
-    (elem-test ,before (quote ,test-func) ,after)))
+     (elem-test ,before (quote ,test-func) ,after ,mode-func)))
 
 
 ;; elem-forward-one
@@ -46,307 +47,306 @@
     elem-forward-one
     "foo(abc|, def)")
 
-(ert-deftest test-move-to-next-arg ()
-  (elem-test "foo(abc|, def)"
-             'elem-forward-one
-             "foo(abc, def|)"))
+(elem-deftest move-to-next-arg
+    "foo(abc|, def)"
+    elem-forward-one
+    "foo(abc, def|)")
 
-(ert-deftest test-attempt-to-move-past-end ()
-  (elem-test "foo(abc, def|)"
-             'elem-forward-one
-             "foo(abc, def|)"))
+(elem-deftest attempt-to-move-past-end
+    "foo(abc, def|)"
+    elem-forward-one
+    "foo(abc, def|)")
 
-(ert-deftest test-move-to-next-arg-when-starting-in-string ()
-  (elem-test "foo(\"th|at, thing\", 123)"
-             'elem-forward-one
-             "foo(\"that, thing\"|, 123)"))
+(elem-deftest move-to-next-arg-when-starting-in-string
+    "foo(\"th|at, thing\", 123)"
+    elem-forward-one
+    "foo(\"that, thing\"|, 123)")
 
-(ert-deftest test-move-to-next-arg-with-trailing-space ()
-  (elem-test "foo(abc|, def )"
-             'elem-forward-one
-             "foo(abc, def| )"))
+(elem-deftest move-to-next-arg-with-trailing-space
+    "foo(abc|, def )"
+    elem-forward-one
+    "foo(abc, def| )")
 
-(ert-deftest test-move-to-next-arg-inside-brackets ()
-  (elem-test "[abc|, 123, haha ]"
-             'elem-forward-one
-             "[abc, 123|, haha ]"))
+(elem-deftest move-to-next-arg-inside-brackets
+    "[abc|, 123, haha ]"
+    elem-forward-one
+    "[abc, 123|, haha ]")
 
-(ert-deftest test-move-to-next-arg-inside-braces ()
-  (elem-test "{abc|, 123 , haha}"
-             'elem-forward-one
-             "{abc, 123| , haha}"))
+(elem-deftest move-to-next-arg-inside-braces
+    "{abc|, 123 , haha}"
+    elem-forward-one
+    "{abc, 123| , haha}")
 
-(ert-deftest test-move-to-end-of-arg-complex ()
-  (elem-test "foo(123, |yyy =\"a,b\")"
-             'elem-forward-one
-             "foo(123, yyy =\"a,b\"|)"))
+(elem-deftest move-to-end-of-arg-complex
+    "foo(123, |yyy =\"a,b\")"
+    elem-forward-one
+    "foo(123, yyy =\"a,b\"|)")
 
-(ert-deftest test-move-to-next-arg-complex ()
-  (elem-test "foo(123|, yyy=\"a,b\")"
-             'elem-forward-one
-             "foo(123, yyy=\"a,b\"|)"))
+(elem-deftest move-to-next-arg-complex
+    "foo(123|, yyy=\"a,b\")"
+    elem-forward-one
+    "foo(123, yyy=\"a,b\"|)")
 
-(ert-deftest test-move-to-next-arg-complex ()
-  (elem-test "foo(123|, yyy =\"a,b\")"
-             'elem-forward-one
-             "foo(123, yyy =\"a,b\"|)"))
+(elem-deftest move-to-next-arg-complex
+    "foo(123|, yyy =\"a,b\")"
+    elem-forward-one
+    "foo(123, yyy =\"a,b\"|)")
 
-(ert-deftest test-when-inside-buffer ()
-  (elem-test "foo(|abc, def)"
-             'elem-forward-one
-             "foo(abc|, def)"))
+(elem-deftest when-inside-buffer
+    "foo(|abc, def)"
+    elem-forward-one
+    "foo(abc|, def)")
 
-(ert-deftest test-move-forward-when-not-in-parens ()
-  "Nothing should happen when outside parens/brackets/braces"
-  (elem-test "f|oo bah"
-             'elem-forward-one
-             "f|oo bah"))
+; Nothing should happen when outside parens/brackets/braces
+(elem-deftest move-forward-when-not-in-parens
+    "f|oo bah"
+    elem-forward-one
+    "f|oo bah")
 
-(ert-deftest test-move-forward-multi-line-0 ()
-  (elem-test "[|foo,\n   \"second, actually\", \n123  ]"
-             'elem-forward-one
-             "[foo|,\n   \"second, actually\", \n123  ]"))
+(elem-deftest move-forward-multi-line-0
+    "[|foo,\n   \"second, actually\", \n123  ]"
+    elem-forward-one
+    "[foo|,\n   \"second, actually\", \n123  ]")
 
-(ert-deftest test-move-forward-multi-line-1 ()
-  (elem-test "[foo|,\n   \"second, actually\", \n123  ]"
-             'elem-forward-one
-             "[foo,\n   \"second, actually\"|, \n123  ]"))
+(elem-deftest move-forward-multi-line-1
+    "[foo|,\n   \"second, actually\", \n123  ]"
+    elem-forward-one
+    "[foo,\n   \"second, actually\"|, \n123  ]")
 
-(ert-deftest test-move-forward-multi-line-2 ()
-  (elem-test "[foo,\n   \"second, actually\"|, \n123  ]"
-             'elem-forward-one
-             "[foo,\n   \"second, actually\", \n123|  ]"))
+(elem-deftest move-forward-multi-line-2
+    "[foo,\n   \"second, actually\"|, \n123  ]"
+    elem-forward-one
+    "[foo,\n   \"second, actually\", \n123|  ]")
 
-(ert-deftest test-c++-move-forward-with-comments ()
-  (elem-test
-   "
+(elem-deftest c++-move-forward-with-comments
+
+    "
    x = [foo|,                    /* another, comment */
         \"second, actually\",   // comment
         123 ];
    "
-   'elem-forward-one
-   "
+    elem-forward-one
+    "
    x = [foo,                    /* another, comment */
         \"second, actually\"|,   // comment
         123 ];
    "
-   'c++-mode))
+  'c++-mode)
 
-(ert-deftest test-c++-move-forward-with-comments-2 ()
-  (elem-test
-   "
+(elem-deftest c++-move-forward-with-comments-2
+
+    "
    x = [foo,                    /* another, comment */
         \"second, actually\"|,   // comment
         123 ];
    "
-   'elem-forward-one
-   "
+    elem-forward-one
+    "
    x = [foo,                    /* another, comment */
         \"second, actually\",   // comment
         123| ];
    "
-   'c++-mode))
+  'c++-mode)
 
 ;; elem-backward-one
 
-(ert-deftest test-move-back-to-start-of-arg ()
-  (elem-test "foo(abc, def|)"
-             'elem-backward-one
-             "foo(abc, |def)"))
+(elem-deftest move-back-to-start-of-arg
+    "foo(abc, def|)"
+    elem-backward-one
+    "foo(abc, |def)")
 
-(ert-deftest test-move-to-previous-arg ()
-  (elem-test "foo(abc, |def)"
-             'elem-backward-one
-             "foo(|abc, def)"))
+(elem-deftest move-to-previous-arg
+    "foo(abc, |def)"
+    elem-backward-one
+    "foo(|abc, def)")
 
-(ert-deftest test-move-to-previous-arg-with-leading-space ()
-  (elem-test "foo( abc, |def)"
-             'elem-backward-one
-             "foo( |abc, def)"))
+(elem-deftest move-to-previous-arg-with-leading-space
+    "foo( abc, |def)"
+    elem-backward-one
+    "foo( |abc, def)")
 
-(ert-deftest test-move-to-start-of-arg-when-starting-in-string ()
-  (elem-test "foo(321, \"th|at, thing\", 123)"
-             'elem-backward-one
-             "foo(321, |\"that, thing\", 123)"))
+(elem-deftest move-to-start-of-arg-when-starting-in-string
+    "foo(321, \"th|at, thing\", 123)"
+    elem-backward-one
+    "foo(321, |\"that, thing\", 123)")
 
-(ert-deftest test-move-to-start-of-arg-when-starting-in-string-with-kwarg ()
-  (elem-test "foo(meh=\"th|at, thing\", 123)"
-             'elem-backward-one
-             "foo(|meh=\"that, thing\", 123)"))
+(elem-deftest move-to-start-of-arg-when-starting-in-string-with-kwarg
+    "foo(meh=\"th|at, thing\", 123)"
+    elem-backward-one
+    "foo(|meh=\"that, thing\", 123)")
 
-(ert-deftest test-move-to-previous-arg-inside-brackets ()
-  (elem-test "[abc, |123, haha ]"
-             'elem-backward-one
-             "[|abc, 123, haha ]"))
+(elem-deftest move-to-previous-arg-inside-brackets
+    "[abc, |123, haha ]"
+    elem-backward-one
+    "[|abc, 123, haha ]")
 
-(ert-deftest test-move-to-previous-arg-inside-braces ()
-  (elem-test "{abc, |123 , haha}"
-             'elem-backward-one
-             "{|abc, 123 , haha}"))
+(elem-deftest move-to-previous-arg-inside-braces
+    "{abc, |123 , haha}"
+    elem-backward-one
+    "{|abc, 123 , haha}")
 
-(ert-deftest test-move-to-beginning-of-arg-complex ()
-  (elem-test "foo(123, yyy =\"a,b\"|)"
-             'elem-backward-one
-             "foo(123, |yyy =\"a,b\")"))
+(elem-deftest move-to-beginning-of-arg-complex
+    "foo(123, yyy =\"a,b\"|)"
+    elem-backward-one
+    "foo(123, |yyy =\"a,b\")")
 
-(ert-deftest test-move-to-previous-arg-complex ()
-  (elem-test "foo(123, |yyy =\"a,b\")"
-             'elem-backward-one
-             "foo(|123, yyy =\"a,b\")"))
+(elem-deftest move-to-previous-arg-complex
+    "foo(123, |yyy =\"a,b\")"
+    elem-backward-one
+    "foo(|123, yyy =\"a,b\")")
 
-(ert-deftest test-move-backward-when-not-in-parens ()
-  "Nothing should happen when outside parens/brackets/braces"
-  (elem-test "foo b|ah"
-             'elem-backward-one
-             "foo b|ah"))
 
-(ert-deftest test-move-backward-multi-line-0 ()
-  (elem-test "[foo,\n   \"second, actually\", \n123|  ]"
-             'elem-backward-one
-             "[foo,\n   \"second, actually\", \n|123  ]"))
+; Nothing should happen when outside parens/brackets/braces
+(elem-deftest move-backward-when-not-in-parens
+    "foo b|ah"
+    elem-backward-one
+    "foo b|ah")
 
-(ert-deftest test-move-backward-multi-line-1 ()
-  (elem-test "[foo,\n   \"second, actually\", \n|123  ]"
-             'elem-backward-one
-             "[foo,\n   |\"second, actually\", \n123  ]"))
+(elem-deftest move-backward-multi-line-0
+    "[foo,\n   \"second, actually\", \n123|  ]"
+    elem-backward-one
+    "[foo,\n   \"second, actually\", \n|123  ]")
 
-(ert-deftest test-move-backward-multi-line-2 ()
-  (elem-test "[foo,\n   |\"second, actually\", \n123  ]"
-             'elem-backward-one
-             "[|foo,\n   \"second, actually\", \n123  ]"))
+(elem-deftest move-backward-multi-line-1
+    "[foo,\n   \"second, actually\", \n|123  ]"
+    elem-backward-one
+    "[foo,\n   |\"second, actually\", \n123  ]")
 
-(ert-deftest test-c++-move-backwards-with-comments ()
-  (elem-test
-   "
+(elem-deftest move-backward-multi-line-2
+    "[foo,\n   |\"second, actually\", \n123  ]"
+    elem-backward-one
+    "[|foo,\n   \"second, actually\", \n123  ]")
+
+(elem-deftest c++-move-backwards-with-comments
+
+    "
    x = [foo,                    /* another, comment */
         \"second, actually\",   // comment
         |123 ];
    "
-   'elem-backward-one
-   "
+    elem-backward-one
+    "
    x = [foo,                    /* another, comment */
         |\"second, actually\",   // comment
         123 ];
    "
-   'c++-mode))
+  'c++-mode)
 
-(ert-deftest test-c++-move-backwards-with-comments-2 ()
-  (elem-test
-   "
+(elem-deftest c++-move-backwards-with-comments-2
+
+    "
    x = [foo,                    /* another, comment */
         |\"second, actually\",   // comment
         123 ];
    "
-   'elem-backward-one
-   "
+    elem-backward-one
+    "
    x = [|foo,                    /* another, comment */
         \"second, actually\",   // comment
         123 ];
    "
-   'c++-mode))
+  'c++-mode)
 
 ;; elem-forward
 
-(ert-deftest test-elem-forward-one ()
-  (elem-test "foo(|abc, def)"
-             '(lambda () (elem-forward 1))
-             "foo(abc|, def)"))
+(elem-deftest elem-forward-one
+    "foo(|abc, def)"
+    (elem-forward 1)
+    "foo(abc|, def)")
 
-(ert-deftest test-elem-forward-two ()
-  (elem-test "foo(|abc, def)"
-             '(lambda () (elem-forward 2))
-             "foo(abc, def|)"))
+(elem-deftest elem-forward-two
+    "foo(|abc, def)"
+    (elem-forward 2)
+    "foo(abc, def|)")
 
-(ert-deftest test-elem-forward-too-many ()
-  (elem-test "foo(|abc, def)"
-             '(lambda () (elem-forward 4))
-             "foo(abc, def|)"))
+(elem-deftest elem-forward-too-many
+    "foo(|abc, def)"
+    (elem-forward 4)
+    "foo(abc, def|)")
 
-(ert-deftest test-elem-forward-negative ()
-  (elem-test "foo(abc, def|)"
-             '(lambda () (elem-forward -2))
-             "foo(|abc, def)"))
+(elem-deftest elem-forward-negative
+    "foo(abc, def|)"
+    (elem-forward -2)
+    "foo(|abc, def)")
 
-(ert-deftest test-elem-forward-negative-too-many ()
-  (elem-test "foo(abc, def|)"
-             '(lambda () (elem-forward -3))
-             "foo(|abc, def)"))
+(elem-deftest elem-forward-negative-too-many
+    "foo(abc, def|)"
+    (elem-forward -3)
+    "foo(|abc, def)")
 
 ;; elem-transpose
 
-(ert-deftest test-transpose-simple-forward ()
-  (elem-test "foo(|abc, def)"
-             '(lambda () (elem-transpose 1))
-             "foo(def, abc|)"))
+(elem-deftest transpose-simple-forward
+    "foo(|abc, def)"
+    (elem-transpose 1)
+    "foo(def, abc|)")
 
-(ert-deftest test-transpose-simple-forward-2 ()
-  (elem-test "foo(a|bc, def)"
-             '(lambda () (elem-transpose 1))
-             "foo(def, abc|)"))
+(elem-deftest transpose-simple-forward-2
+    "foo(a|bc, def)"
+    (elem-transpose 1)
+    "foo(def, abc|)")
 
-(ert-deftest test-transpose-forward-with-ws ()
-  (elem-test "foo(  |aaa, bbb  ,  ccc,ddd  )"
-             '(lambda () (elem-transpose 1))
-             "foo(  bbb, aaa|  ,  ccc,ddd  )"))
+(elem-deftest transpose-forward-with-ws
+    "foo(  |aaa, bbb  ,  ccc,ddd  )"
+    (elem-transpose 1)
+    "foo(  bbb, aaa|  ,  ccc,ddd  )")
 
-(ert-deftest test-transpose-forward-with-ws-2 ()
-  (elem-test "foo(  bbb, aaa|  ,  ccc,ddd  )"
-             '(lambda () (elem-transpose 1))
-             "foo(  bbb, ccc  ,  aaa|,ddd  )"))
+(elem-deftest transpose-forward-with-ws-2
+    "foo(  bbb, aaa|  ,  ccc,ddd  )"
+    (elem-transpose 1)
+    "foo(  bbb, ccc  ,  aaa|,ddd  )")
 
-(ert-deftest test-transpose-simple-backward ()
-  (elem-test "foo(abc, def|)"
-             '(lambda () (elem-transpose -1))
-             "foo(def|, abc)"))
+(elem-deftest transpose-simple-backward
+    "foo(abc, def|)"
+    (elem-transpose -1)
+    "foo(def|, abc)")
 
 ;; FIXME: doesn't work as expected but transpose-words doesn't work
 ;; well in this situation either
-;; (ert-deftest test-transpose-simple-backward-2 ()
-;;   (elem-test "foo(abc, |def)"
-;;              '(lambda () (elem-transpose -1))
-;;              "foo(|def, abc)"))
+;; (elem-deftest transpose-simple-backward-2
+;;   "foo(abc, |def)"
+;;   (elem-transpose -1)
+;;   "foo(|def, abc)")
 
-(ert-deftest test-transpose-nested-inner ()
-  (elem-test "xxx(yyy(|123, zzz), 66)"
-             '(lambda () (elem-transpose 1))
-             "xxx(yyy(zzz, 123|), 66)"))
+(elem-deftest transpose-nested-inner
+    "xxx(yyy(|123, zzz), 66)"
+    (elem-transpose 1)
+    "xxx(yyy(zzz, 123|), 66)")
 
-(ert-deftest test-transpose-nested-outer ()
-  (elem-test "xxx(y|yy(123, zzz), 66)"
-             '(lambda () (elem-transpose 1))
-             "xxx(66, yyy(123, zzz)|)"))
+(elem-deftest transpose-nested-outer
+    "xxx(y|yy(123, zzz), 66)"
+    (elem-transpose 1)
+    "xxx(66, yyy(123, zzz)|)")
 
-(ert-deftest test-transpose-inside-string-with-comma ()
-  (elem-test "foo(abc, \"de|f, smell\", thing=12, xxx)"
-             '(lambda () (elem-transpose 1))
-             "foo(abc, thing=12, \"def, smell\"|, xxx)"))
+(elem-deftest transpose-inside-string-with-comma
+    "foo(abc, \"de|f, smell\", thing=12, xxx)"
+    (elem-transpose 1)
+    "foo(abc, thing=12, \"def, smell\"|, xxx)")
 
-(ert-deftest test-c++-mode-transpose-0 ()
-  (elem-test
-   "
-   x = [foo|,    /* another, comment */
-        \"second, actually\",   // comment
-        123 ];
-   "
-   '(lambda () (elem-transpose 1))
-   "
-   x = [\"second, actually\",    /* another, comment */
-        foo|,   // comment
-        123 ];
-   "
-   'c++-mode))
+(elem-deftest c++-mode-transpose-0
+    "
+    x = [foo|,    /* another, comment */
+         \"second, actually\",   // comment
+         123 ];
+    "
+    (elem-transpose 1)
+    "
+    x = [\"second, actually\",    /* another, comment */
+         foo|,   // comment
+         123 ];
+    "
+    'c++-mode)
 
-(ert-deftest test-c++-mode-transpose-1 ()
-  (elem-test
-   "
-   x = [foo,    /* another, comment */
-        \"seco|nd, actually\",   // comment
-        123 ];
-   "
-   '(lambda () (elem-transpose 1))
-   "
-   x = [foo,    /* another, comment */
-        123,   // comment
-        \"second, actually\"| ];
-   "
-   'c++-mode))
+(elem-deftest c++-mode-transpose-1
+    "
+    x = [foo,    /* another, comment */
+         \"seco|nd, actually\",   // comment
+         123 ];
+    "
+    (elem-transpose 1)
+    "
+    x = [foo,    /* another, comment */
+         123,   // comment
+         \"second, actually\"| ];
+    "
+    'c++-mode)
