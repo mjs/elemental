@@ -18,17 +18,17 @@
 ;; literals and nested function calls are involved. The functions in
 ;; this module make this process easier.
 ;;
-;; The main functions of interest are elem-forward and elem-transpose.
+;; The main functions of interest are elem/forward and elem/transpose.
 ;;
 ;; Given a source code line, here's how the point moves with successive
-;; calls to elem-forward (the | shows the point):
+;; calls to elem/forward (the | shows the point):
 ;;
 ;;     myfunc(|123, "some, string", fn(a, b))
 ;;     myfunc(123|, "some, string", fn(a, b))
 ;;     myfunc(123, "some, string"|, fn(a, b))
 ;;     myfunc(123, "some, string", fn(a, b)|)
 ;;
-;; Similarly, here's how successive calls to elem-transpose work:
+;; Similarly, here's how successive calls to elem/transpose work:
 ;;
 ;;     myfunc(|123, "some, string", fn(a, b))
 ;;     myfunc("some, string", 123|, fn(a, b))
@@ -36,7 +36,7 @@
 ;;
 ;; These functions work correctly over multiple lines and respect
 ;; whitespace around elemnents. For example, here's how successive
-;; elem-transpose calls work on this multi-line list/array:
+;; elem/transpose calls work on this multi-line list/array:
 ;;
 ;;     [  1|23,
 ;;        "some, string",
@@ -50,14 +50,14 @@
 ;;        fn(a, b),
 ;;        123|  ]
 ;;
-;; elem-forward and elem-transpose take an optional numerical argument
+;; elem/forward and elem/transpose take an optional numerical argument
 ;; (which can be specified as a prefix argument). Positive numbers
 ;; cause the action to be applied multiple times in the forward
 ;; direction. Negative numbers cause the action to be applied
 ;; backwards.
 ;;
-;; You may also like to use elem-forward-one, elem-backward-one or
-;; elem-transpose-backward for keyboard bindings.
+;; You may also like to use elem/forward-one, elem/backward-one or
+;; elem/transpose-backward for keyboard bindings.
 
 ;; Installation:
 ;;
@@ -68,9 +68,9 @@
 ;; Example config:
 ;;
 ;;   (require 'elemental)
-;;   (global-set-key (kbd "C-(") 'elem-backward-one)
-;;   (global-set-key (kbd "C-)") 'elem-forward)
-;;   (global-set-key (kbd "C-*") 'elem-transpose)
+;;   (global-set-key (kbd "C-(") 'elem/backward-one)
+;;   (global-set-key (kbd "C-)") 'elem/forward)
+;;   (global-set-key (kbd "C-*") 'elem/transpose)
 
 ;; Limitations:
 ;;
@@ -106,90 +106,90 @@
 ;; 02111-1307, USA.
 
 
-(defun elem-forward-one ()
+(defun elem/forward-one ()
   (interactive)
-  (unless (elem-outside-parens?)
-    (elem-move-out-of-string-if-required)
+  (unless (elem/outside-parens?)
+    (elem/move-out-of-string-if-required)
     (condition-case nil
         (progn
-          (elem-forward-sexp-skipping-comments)
-          (while (not (elem-looking-at-over-ws-and-comments ","))
-            (elem-forward-sexp-skipping-comments)))
+          (elem/forward-sexp-skipping-comments)
+          (while (not (elem/looking-at-over-ws-and-comments ","))
+            (elem/forward-sexp-skipping-comments)))
       (scan-error nil))))
 
-(defun elem-backward-one ()
+(defun elem/backward-one ()
   (interactive)
-  (unless (elem-outside-parens?)
+  (unless (elem/outside-parens?)
     (condition-case nil
         (progn
-          (unless (elem-move-out-of-string-if-required)
-            (elem-backward-sexp-skipping-comments))
-          (while (not (elem-looking-back-over-ws-and-comments ","))
-            (elem-backward-sexp-skipping-comments)))
+          (unless (elem/move-out-of-string-if-required)
+            (elem/backward-sexp-skipping-comments))
+          (while (not (elem/looking-back-over-ws-and-comments ","))
+            (elem/backward-sexp-skipping-comments)))
       (scan-error nil))))
 
-(defun elem-forward-sexp-skipping-comments ()
+(defun elem/forward-sexp-skipping-comments ()
   (forward-sexp)
-  (while (elem-in-comment-by-font-lock? (point))
+  (while (elem/in-comment-by-font-lock? (point))
     (forward-sexp)))
 
-(defun elem-backward-sexp-skipping-comments ()
+(defun elem/backward-sexp-skipping-comments ()
   (backward-sexp)
-  (while (elem-in-comment-by-font-lock? (point))
+  (while (elem/in-comment-by-font-lock? (point))
     (backward-sexp)))
 
-(defun elem-looking-at-over-ws-and-comments (regex)
+(defun elem/looking-at-over-ws-and-comments (regex)
   (save-excursion
-    (elem-skip-ws-and-comments 0 'forward-char)
+    (elem/skip-ws-and-comments 0 'forward-char)
     (looking-at regex)))
 
-(defun elem-looking-back-over-ws-and-comments (regex)
+(defun elem/looking-back-over-ws-and-comments (regex)
   (save-excursion
-    (elem-skip-ws-and-comments -1 'backward-char)
+    (elem/skip-ws-and-comments -1 'backward-char)
     (looking-back regex)))
 
-(defun elem-skip-ws-and-comments (look-offset move-func)
-  (while (elem-in-comment? (+ (point) look-offset))
+(defun elem/skip-ws-and-comments (look-offset move-func)
+  (while (elem/in-comment? (+ (point) look-offset))
       (funcall move-func)))
 
-(defun elem-in-comment? (where)
-  (or (elem-in-comment-or-ws-by-syntax? where)
-      (elem-in-comment-by-font-lock? where)))
+(defun elem/in-comment? (where)
+  (or (elem/in-comment-or-ws-by-syntax? where)
+      (elem/in-comment-by-font-lock? where)))
 
-(defun elem-in-comment-or-ws-by-syntax? (where)
-  (memq (char-syntax (char-after where)) elem-comment-and-ws-classes))
+(defun elem/in-comment-or-ws-by-syntax? (where)
+  (memq (char-syntax (char-after where)) elem/comment-and-ws-classes))
 
-(defun elem-in-comment-by-font-lock? (where)
-  (memq (get-text-property where 'face) elem-comment-faces))
+(defun elem/in-comment-by-font-lock? (where)
+  (memq (get-text-property where 'face) elem/comment-faces))
 
-(defun elem-outside-parens? ()
+(defun elem/outside-parens? ()
   (<= (car (syntax-ppss)) 0))
 
-(defun elem-move-out-of-string-if-required ()
+(defun elem/move-out-of-string-if-required ()
   (let ((pstate (syntax-ppss)))
     (when (nth 3 pstate)
         (goto-char (nth 8 pstate)))))    ; in a string, move to start
 
-(defun elem-forward (arg)
+(defun elem/forward (arg)
   (interactive "p*")
   (if (>= arg 0)
-      (dotimes (_ arg) (elem-forward-one))
-    (dotimes (_ (abs arg)) (elem-backward-one))))
+      (dotimes (_ arg) (elem/forward-one))
+    (dotimes (_ (abs arg)) (elem/backward-one))))
 
-(defun elem-transpose (arg)
+(defun elem/transpose (arg)
   (interactive "*p")
-  (transpose-subr 'elem-forward arg))
+  (transpose-subr 'elem/forward arg))
 
-(defun elem-transpose-backward (arg)
+(defun elem/transpose-backward (arg)
   (interactive "*p")
-  (transpose-subr 'elem-forward (- arg)))
+  (transpose-subr 'elem/forward (- arg)))
 
-(defconst elem-comment-faces
+(defconst elem/comment-faces
   '(font-lock-comment-face
     font-lock-comment-delimiter-face)
   "font lock faces used for comments")
 
-(defconst elem-comment-and-ws-classes
+(defconst elem/comment-and-ws-classes
   '(32 33 60 62)
   "Emacs syntax classes for whitespace and comments")
 
