@@ -113,7 +113,7 @@
     (condition-case nil
         (progn
           (elem-forward-sexp-skipping-comments)
-          (while (not (elem-looking-forward-ignoring-ws ","))
+          (while (not (elem-looking-at-over-ws-and-comments ","))
             (elem-forward-sexp-skipping-comments)))
       (scan-error nil))))
 
@@ -124,39 +124,43 @@
         (progn
           (unless (elem-move-out-of-string-if-required)
             (elem-backward-sexp-skipping-comments))
-          (while (not (elem-looking-back-ignoring-ws ","))
+          (while (not (elem-looking-back-over-ws-and-comments ","))
             (elem-backward-sexp-skipping-comments)))
       (scan-error nil))))
 
 (defun elem-forward-sexp-skipping-comments ()
   (forward-sexp)
-  (while (elem-in-comment? (point))
+  (while (elem-in-comment-by-font-lock? (point))
     (forward-sexp)))
 
 (defun elem-backward-sexp-skipping-comments ()
   (backward-sexp)
-  (while (elem-in-comment? (point))
+  (while (elem-in-comment-by-font-lock? (point))
     (backward-sexp)))
 
-(defun elem-looking-forward-ignoring-ws (regex)
+(defun elem-looking-at-over-ws-and-comments (regex)
   (save-excursion
-    (elem-skip-ws-and-comments 'char-after 0 'forward-char)
+    (elem-skip-ws-and-comments 0 'forward-char)
     (looking-at regex)))
 
-(defun elem-looking-back-ignoring-ws (regex)
+(defun elem-looking-back-over-ws-and-comments (regex)
   (save-excursion
-    (elem-skip-ws-and-comments 'char-before -1 'backward-char)
-    (backward-char)
-    (looking-at regex)))
+    (elem-skip-ws-and-comments -1 'backward-char)
+    (looking-back regex)))
 
-(defun elem-skip-ws-and-comments (look-func point-offset move-func)
-  (while (or (memq (char-syntax (funcall look-func)) '(32 33 60 62)) (elem-in-comment? (+ (point) point-offset)))
+(defun elem-skip-ws-and-comments (look-offset move-func)
+  (while (elem-in-comment? (+ (point) look-offset))
       (funcall move-func)))
 
 (defun elem-in-comment? (where)
-  (if (memq (get-text-property where 'face) elem-comment-faces)
-      t
-    nil))
+  (or (elem-in-comment-or-ws-by-syntax? where)
+      (elem-in-comment-by-font-lock? where)))
+
+(defun elem-in-comment-or-ws-by-syntax? (where)
+  (memq (char-syntax (char-after where)) elem-comment-and-ws-classes))
+
+(defun elem-in-comment-by-font-lock? (where)
+  (memq (get-text-property where 'face) elem-comment-faces))
 
 (defun elem-outside-parens? ()
   (<= (car (syntax-ppss)) 0))
@@ -184,5 +188,9 @@
   '(font-lock-comment-face
     font-lock-comment-delimiter-face)
   "font lock faces used for comments")
+
+(defconst elem-comment-and-ws-classes
+  '(32 33 60 62)
+  "Emacs syntax classes for whitespace and comments")
 
 (provide 'elemental)
