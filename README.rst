@@ -1,6 +1,6 @@
-==============
- Introduction
-==============
+===========
+ elemental
+===========
 
 elemental is a set of Emacs Lisp functions for intelligently jumping
 between and transposing list/tuple/dictionary/function-parameter
