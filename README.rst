@@ -5,7 +5,7 @@
 elemental is a set of Emacs Lisp functions for intelligently jumping
 between and transposing list/tuple/dictionary/function-parameter
 elements. These functions are primarily useful when editing software
-source code
+source code.
 
 An quick `demonstration screencast`_ is available on Youtube.
 
