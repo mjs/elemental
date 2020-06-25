@@ -12,12 +12,5 @@ An quick `demonstration screencast`_ is available on Youtube.
 For documentation, see the top of `elemental.el`_ in the source
 distribution.
 
-==================
- Release Archives
-==================
-
- * `v0.1`_
-
 .. _`demonstration screencast`: http://www.youtube.com/watch?v=V9MRMm884mo
-.. _elemental.el: https://bitbucket.org/mjs0/elemental/raw/tip/elemental.el
-.. _v0.1: https://bitbucket.org/mjs0/elemental/get/v0.1.zip
+.. _elemental.el: https://github.com/mjs/elemental/blob/master/elemental.el
